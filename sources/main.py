@@ -11,7 +11,10 @@ logger.setLevel(logging.INFO)
 
 
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Использование: <Название решения>, [сброс]")
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Использование для чата {update.effective_chat.id}: <Название решения>, [сброс]"
+    )
 
 
 def echo(update, context):
@@ -36,6 +39,11 @@ def echo(update, context):
         response_text = f'{bot.data}'
 
     context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
+    if bot_settings['admin_chat'] != '' and bot_settings['admin_chat'] != str(update.effective_chat.id):
+        context.bot.send_message(
+            chat_id=bot_settings['admin_chat'],
+            text=f"Chat {update.effective_chat.username} - {update.effective_chat.id}: {response_text}"
+        )
 
 
 def main():
