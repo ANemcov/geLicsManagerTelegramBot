@@ -111,7 +111,8 @@ def get_settings():
     settings = {'telegram_bot_token': '',
                 'utils_path': '',
                 'root_password': '',
-                'bitmobile_host': ''}
+                'bitmobile_host': '',
+                'admin_chat': ''}
 
     settings.update(_load_settings_file())
     settings.update(_load_env_settings())
