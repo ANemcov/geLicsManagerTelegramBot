@@ -371,3 +371,4 @@ cython_debug/
 /docker_run.sh
 /build.sh
 /run.sh
+.vscode/
