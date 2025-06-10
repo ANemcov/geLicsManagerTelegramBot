@@ -59,44 +59,6 @@ def start_telegram_bot():
     updater.idle()
 
 
-def start_web_api():
-    from fastapi import FastAPI
-    from fastapi.responses import JSONResponse
-    from fastapi.middleware.cors import CORSMiddleware
-    import uvicorn
-    from bot import GrotemServerConnector
-
-    settings = get_settings()
-    connector = GrotemServerConnector(settings['bitmobile_host'], settings['root_password'])
-
-    app = FastAPI()
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-
-    @app.get("/")
-    def index():
-        return {"message": "Grotem Lic API is running"}
-
-    @app.get("/solutions/{solution_name}/licenses")
-    def get_licenses(solution_name: str):
-        if not connector.get_lic_info(solution_name):
-            return JSONResponse(status_code=400, content={"error": connector.error_description})
-        return connector.data
-
-    @app.post("/solutions/{solution_name}/reset")
-    def reset_licenses(solution_name: str):
-        if not connector.reset_lic_count(solution_name):
-            return JSONResponse(status_code=400, content={"error": connector.error_description})
-        return {"status": "ok"}
-
-    @app.post("/solutions/{solution_name}/set/{count}")
-    def set_licenses(solution_name: str, count: int):
-        if not connector.set_lic_count(solution_name, lic_count=count):
-            return JSONResponse(status_code=400, content={"error": connector.error_description})
-        return {"status": "ok"}
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
 def main():
     mode = os.getenv("MODE", "both").lower()  # 'bot', 'web', or 'both'
     logger.info(f"Starting in MODE={mode}")
@@ -104,11 +66,11 @@ def main():
     if mode == "bot":
         start_telegram_bot()
     elif mode == "web":
-        start_web_api()
+        import uvicorn
+        uvicorn.run("web_api:app", host="0.0.0.0", port=8000)
     elif mode == "both":
-        # Параллельный запуск
         Process(target=start_telegram_bot).start()
-        Process(target=start_web_api).start()
+        Process(target=lambda: __import__('uvicorn').run("web_api:app", host="0.0.0.0", port=8000)).start()
     else:
         raise ValueError("Unknown MODE: use 'bot', 'web' or 'both'")
 

@@ -38,3 +38,28 @@ docker run -d \
 --log-opt max-file=3 \
 anemcov/ge-lic-bot:webapp
 ```
+
+Задай WebApp URL:
+
+`/setdomain`
+
+Укажи:
+
+`licbot.example.com`
+
+Установи WebApp URL через Bot API
+
+```http
+POST https://api.telegram.org/bot<YOUR_TOKEN>/setChatMenuButton
+Content-Type: application/json
+
+{
+  "menu_button": {
+    "type": "web_app",
+    "text": "Открыть панель",
+    "web_app": {
+      "url": "https://licbot.example.com/app"
+    }
+  }
+}
+```
