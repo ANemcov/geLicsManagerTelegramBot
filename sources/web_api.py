@@ -37,15 +37,29 @@ def get_licenses(solution_name: str, x_telegram_initdata: str = Header(...)):
     return connector.data
 
 @app.post("/api/solutions/{solution_name}/reset")
-def reset_licenses(solution_name: str):
+def reset_licenses(solution_name: str, x_telegram_initdata: str = Header(...)):
+    bot_token = settings['telegram_bot_token']
+
+    # Проверяем подпись initData
+    if not is_valid_init_data(x_telegram_initdata, bot_token):
+        raise HTTPException(status_code=403, detail="Invalid Telegram initData")
+
     if not connector.reset_lic_count(solution_name):
         return JSONResponse(status_code=400, content={"error": connector.error_description})
+
     return {"status": "ok"}
 
 @app.post("/api/solutions/{solution_name}/set/{count}")
-def set_licenses(solution_name: str, count: int):
+def set_licenses(solution_name: str, count: int, x_telegram_initdata: str = Header(...)):
+    bot_token = settings['telegram_bot_token']
+
+    # Проверяем подпись initData
+    if not is_valid_init_data(x_telegram_initdata, bot_token):
+        raise HTTPException(status_code=403, detail="Invalid Telegram initData")
+
     if not connector.set_lic_count(solution_name, lic_count=count):
         return JSONResponse(status_code=400, content={"error": connector.error_description})
+
     return {"status": "ok"}
 
 app.mount("/app", StaticFiles(directory="static", html=True), name="static")
