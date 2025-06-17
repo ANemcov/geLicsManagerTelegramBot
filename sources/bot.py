@@ -57,6 +57,26 @@ class GrotemServerConnector(object):
             self.error_description = str(response)
             return False
 
+    def get_solution_list(self):
+        self._init_error_info()
+        solution_list_uri = '/system/solutions'
+        response = self._send_command(solution_list_uri)
+        if type(response) != str:
+            self.error_code = 1
+            self.error_description = 'Get licenses list error: '+str(response)
+            return False
+        try:
+            lic_list = response.split(';')
+        except Exception as e:
+            self.error_code = 2
+            self.error_description = 'Get licenses list split error: ' + str(e)
+            return False
+
+        self.error_code = 0
+        self.error_description = ''
+        self.data = lic_list
+        return True
+    
     def get_lic_info(self, solution_name: str):
         self._init_error_info()
         if solution_name is None:
