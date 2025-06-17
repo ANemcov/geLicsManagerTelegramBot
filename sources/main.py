@@ -1,10 +1,19 @@
 import os
 import logging
 from multiprocessing import Process
+import sys
 from settings import get_settings
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    stream=sys.stdout,  # лог в stdout (подходит для Docker/CI)
+    force=True  # важно, если кто-то уже инициализировал logging раньше
+)
+
+logger = logging.getLogger(__name__)
 
 def start_telegram_bot():
     from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -24,14 +33,14 @@ def start_telegram_bot():
         if 'сброс' in str(update.message.text).lower():
             result = bot.reset_lic_count(solution_name=sn)
             if not result:
-                response_text = f"Couldn't reset licences for solution {sn}: {bot.error_description}"
+                response_text = f"Couldn't reset licenses for solution {sn}: {bot.error_description}"
             else:
-                response_text = f'Reset licences for solution {sn}: {bot.data}'
+                response_text = f'Reset licenses for solution {sn}: {bot.data}'
                 result = bot.get_lic_info(solution_name=sn)
                 if not result:
-                    response_text += f"\r\nCouldn't check licences after update for solution {sn}: {bot.error_description}"
+                    response_text += f"\r\nCouldn't check licenses after update for solution {sn}: {bot.error_description}"
                 else:
-                    response_text += f" \r\nLicences after reset: {bot.data}"
+                    response_text += f" \r\nLicenses after reset: {bot.data}"
         else:
             _ = bot.get_lic_info(solution_name=sn)
             response_text = f'{bot.data}'

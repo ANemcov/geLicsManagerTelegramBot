@@ -18,7 +18,7 @@
 1. Установить параметры в файле config.ini
 2. либо передать их через переменные окружения (рекомендованный вариант)
 3. собрать контейнер ```docker build -t license-bot .```
-4. собрать на Mac с поддержкой Linux (кроссплатформменная компиляция) ```docker buildx build --platform linux/amd64 -t anemcov/ge-lic-bot:webapp --push .```
+4. собрать на Mac с поддержкой Linux (кроссплатформенная компиляция) ```docker buildx build --platform linux/amd64 -t anemcov/ge-lic-bot:webapp --push .```
 5. запустить контейнер ```docker run --rm license-bot```
 
 Пример запуска из командной строки:  

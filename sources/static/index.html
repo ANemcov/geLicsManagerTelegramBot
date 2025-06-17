@@ -62,7 +62,11 @@
 
     async function getLicInfo() {
       const sn = getSolutionName();
-      const res = await fetch(`/api/solutions/${sn}/licenses`);
+      const res = await fetch(`/api/solutions/${sn}/licenses`, {
+        headers: {
+          'X-Telegram-InitData': initData
+        }
+      });
       const data = await res.json();
       output(JSON.stringify(data, null, 2));
     }

@@ -5,6 +5,8 @@
 *.pyd
 .Python
 env
+.env
+.vscode/
 /sources/config.ini
 /sources/key.txt
 /sources/settings.db
@@ -12,3 +14,4 @@ env
 /development.env
 /run.sh
 **/.pytest_cache
+*.log
