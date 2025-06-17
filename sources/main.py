@@ -12,11 +12,14 @@ logging.basicConfig(
     stream=sys.stdout,  # лог в stdout (подходит для Docker/CI)
     force=True  # важно, если кто-то уже инициализировал logging раньше
 )
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
 def start_telegram_bot():
-    from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+    from telegram.ext import CommandHandler, MessageHandler
+    from telegram.ext import filters
+    from telegram.ext import ApplicationBuilder
     from bot import GrotemServerConnector
 
     def start(update, context):
@@ -25,8 +28,12 @@ def start_telegram_bot():
             text=f"Использование для чата {update.effective_chat.id}: <Название решения>, [сброс]"
         )
 
-    def echo(update, context):
-        sn = str(update.message.text).strip().split(' ')[0]
+    async def echo(update, context):
+        if update.message and update.message.text:
+            sn = str(update.message.text).strip().split(' ')[0]
+        else:
+            # обработать другие случаи или пропустить
+            return
         bot_settings = get_settings()
         bot = GrotemServerConnector(bot_settings['bitmobile_host'], bot_settings['root_password'])
 
@@ -45,9 +52,9 @@ def start_telegram_bot():
             _ = bot.get_lic_info(solution_name=sn)
             response_text = f'{bot.data}'
 
-        context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
         if bot_settings['admin_chat'] != '' and bot_settings['admin_chat'] != str(update.effective_chat.id):
-            context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=bot_settings['admin_chat'],
                 text=f"Chat {update.effective_chat.username} - {update.effective_chat.id}: {response_text}"
             )
@@ -58,14 +65,12 @@ def start_telegram_bot():
     if not bot.check_connection():
         raise ConnectionError(f'Unable connect to Bitmobile server {bot_settings["bitmobile_host"]}')
 
-    updater = Updater(token=bot_settings['telegram_bot_token'], use_context=True)
-    dispatcher = updater.dispatcher
+    app = ApplicationBuilder().token(bot_settings['telegram_bot_token']).build()
 
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), echo))
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), echo))
 
-    updater.start_polling()
-    updater.idle()
+    app.run_polling()
 
 
 def main():
