@@ -39,14 +39,14 @@ def is_valid_init_data(init_data: str, bot_token: str) -> bool:
         if received_hash is None:
             return False
         
-        logger.debug('data_check_string: %s', data_check_string)
-        logger.debug('calculated_hash: %s', calculated_hash)
-        logger.debug('received_hash: %s', received_hash)
+        logger.debug(f'data_check_string: {data_check_string}', )
+        logger.debug(f'calculated_hash: {calculated_hash}')
+        logger.debug(f'received_hash: {received_hash}')
 
         return hmac.compare_digest(calculated_hash, received_hash)
 
     except Exception as e:
-        logger.error('Validation error: {e}')
+        logger.error(f'Validation error: {e}')
         return False
 
 
