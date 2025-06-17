@@ -22,13 +22,22 @@
       padding: 10px;
       border-radius: 6px;
     }
+    #loader {
+      margin: 10px 0;
+      font-size: 16px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
   <h2>Управление лицензиями</h2>
 
-  <label>Название решения:</label>
-  <input type="text" id="solution_name" placeholder="например, demo">
+  <div id="loader">Загрузка списка решений...</div>
+
+  <label for="solution_select">Выберите решение:</label>
+  <select id="solution_select" disabled>
+    <option>— загрузка... —</option>
+  </select>
 
   <label>Новое количество лицензий:</label>
   <input type="number" id="lic_count" value="5">
@@ -43,64 +52,158 @@
     const tg = window.Telegram.WebApp;
 
     if (!tg.initData || tg.initData.length === 0) {
-        // WebApp не был открыт из Telegram
-        document.body.innerHTML = "<h2>Доступ только через Telegram</h2><p>Откройте бота в Telegram, чтобы использовать WebApp.</p>";
-        throw new Error("Not running inside Telegram WebApp");
+      document.body.innerHTML = "<h2>Доступ только через Telegram</h2><p>Откройте бота в Telegram, чтобы использовать WebApp.</p>";
+      throw new Error("Not running inside Telegram WebApp");
     }
 
     const initData = tg.initData;
+    tg.expand();
 
-    tg.expand(); // разворачивает WebApp
+    const solutionSelect = document.getElementById("solution_select");
+    const loader = document.getElementById("loader");
+    const licCountInput = document.getElementById("lic_count");
 
-    function getSolutionName() {
-      return document.getElementById("solution_name").value.trim();
-    }
+    solutionSelect.addEventListener("change", async () => {
+      const sn = solutionSelect.value;
+      if (!sn) {
+        licCountInput.value = "";
+        return;
+      }
+    
+      try {
+        const res = await fetch(`/api/solutions/${sn}/licenses`, {
+          headers: {
+            'X-Telegram-InitData': initData
+          }
+        });
+    
+        if (!res.ok) {
+          output(`Ошибка загрузки лицензий: ${res.status} ${res.statusText}`);
+          licCountInput.value = "";
+          return;
+        }
+    
+        const data = await res.json();
+        // Подставляем TotalLicenses в поле input
+        if (typeof data.TotalLicenses === "number") {
+          licCountInput.value = data.TotalLicenses;
+        } else {
+          licCountInput.value = "";
+          output("Данные о лицензиях отсутствуют или некорректны");
+        }
+    
+        // Также можно вывести информацию о лицензиях
+        output(JSON.stringify(data, null, 2));
+      } catch (err) {
+        output(`Ошибка запроса лицензий: ${err.message}`);
+        licCountInput.value = "";
+      }
+    });
 
     function output(text) {
       document.getElementById("output").textContent = text;
     }
 
+    async function fetchSolutions() {
+      try {
+        const res = await fetch("/api/solutions", {
+          headers: {
+            'X-Telegram-InitData': initData
+          }
+        });
+        const text = await res.text();
+
+        try {
+          const solutions = JSON.parse(text);
+          loader.style.display = "none";
+          solutionSelect.innerHTML = ""; // очищаем список
+
+          if (Array.isArray(solutions) && solutions.length > 0) {
+            solutions.forEach(name => {
+              const opt = document.createElement("option");
+              opt.value = name;
+              opt.textContent = name;
+              solutionSelect.appendChild(opt);
+            });
+            solutionSelect.disabled = false;
+          } else {
+            const opt = document.createElement("option");
+            opt.textContent = "Нет доступных решений";
+            solutionSelect.appendChild(opt);
+          }
+
+        } catch (err) {
+          loader.textContent = "Ошибка загрузки списка решений";
+          solutionSelect.innerHTML = "";
+          const opt = document.createElement("option");
+          opt.textContent = "— ошибка —";
+          solutionSelect.appendChild(opt);
+        }
+      } catch (e) {
+        loader.textContent = "Ошибка сети при загрузке решений";
+        solutionSelect.innerHTML = "";
+        const opt = document.createElement("option");
+        opt.textContent = "— ошибка —";
+        solutionSelect.appendChild(opt);
+      }
+    }
+
+    function getSelectedSolution() {
+      return solutionSelect.value;
+    }
+
     async function getLicInfo() {
-      const sn = getSolutionName();
+      const sn = getSelectedSolution();
       const res = await fetch(`/api/solutions/${sn}/licenses`, {
         headers: {
           'X-Telegram-InitData': initData
         }
       });
-      const data = await res.json();
-      output(JSON.stringify(data, null, 2));
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        output(JSON.stringify(data, null, 2));
+      } catch (e) {
+        output("Ошибка парсинга ответа: " + e.message + "\n" + text);
+      }
     }
 
     async function resetLic() {
-      const sn = getSolutionName();
-      const res = await fetch(
-        `/api/solutions/${sn}/reset`, 
-        { 
-            method: "POST",
-            headers: {
-                'X-Telegram-InitData': initData
-            }
+      const sn = getSelectedSolution();
+      const res = await fetch(`/api/solutions/${sn}/reset`, {
+        method: "POST",
+        headers: {
+          'X-Telegram-InitData': initData
         }
-    );
-      const data = await res.json();
-      output(JSON.stringify(data, null, 2));
+      });
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        output(JSON.stringify(data, null, 2));
+      } catch (e) {
+        output("Ошибка парсинга ответа: " + e.message + "\n" + text);
+      }
     }
 
     async function setLic() {
-      const sn = getSolutionName();
+      const sn = getSelectedSolution();
       const count = document.getElementById("lic_count").value;
-      const res = await fetch(
-        `/api/solutions/${sn}/set/${count}`,
-        { 
-            method: "POST",
-            headers: {
-                'X-Telegram-InitData': initData
-            }
+      const res = await fetch(`/api/solutions/${sn}/set/${count}`, {
+        method: "POST",
+        headers: {
+          'X-Telegram-InitData': initData
         }
-    );
-      const data = await res.json();
-      output(JSON.stringify(data, null, 2));
+      });
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        output(JSON.stringify(data, null, 2));
+      } catch (e) {
+        output("Ошибка парсинга ответа: " + e.message + "\n" + text);
+      }
     }
+
+    fetchSolutions(); // загрузка решений при старте
   </script>
 </body>
 </html>

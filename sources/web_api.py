@@ -22,6 +22,20 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 def index():
     return {"message": "Grotem Lic API is running"}
 
+@app.get("/api/solutions")
+def get_solution_list(x_telegram_initdata: str = Header(...)):
+    bot_token = settings['telegram_bot_token']
+        
+    # Проверяем подпись initData
+    if not is_valid_init_data(x_telegram_initdata, bot_token):
+        raise HTTPException(status_code=403, detail="Invalid Telegram initData")
+
+    # Если проверка успешна — вызываем логику лицензий
+    if not connector.get_solution_list():
+        return JSONResponse(status_code=400, content={"error": connector.error_description})
+
+    return connector.data
+
 @app.get("/api/solutions/{solution_name}/licenses")
 def get_licenses(solution_name: str, x_telegram_initdata: str = Header(...)):
     bot_token = settings['telegram_bot_token']
