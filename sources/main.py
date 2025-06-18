@@ -22,7 +22,7 @@ def start_telegram_bot():
     from telegram.ext import ApplicationBuilder
     from bot import GrotemServerConnector
 
-    def start(update, context):
+    async def start(update, context):
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"Использование для чата {update.effective_chat.id}: <Название решения>, [сброс]"

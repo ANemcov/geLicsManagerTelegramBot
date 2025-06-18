@@ -6,7 +6,6 @@ import urllib.parse
 import json
 import logging
 from typing import Dict
-from urllib.parse import parse_qsl
 from urllib.parse import unquote
 
 logger = logging.getLogger(__name__)

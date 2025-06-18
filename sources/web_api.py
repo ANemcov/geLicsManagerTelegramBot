@@ -1,14 +1,13 @@
 # sources/web_api.py
 import logging
 import httpx
-from fastapi import Header
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from bot import GrotemServerConnector
 from settings import get_settings
-from fastapi import Request, HTTPException, Header
+from fastapi import HTTPException, Header
 from utils.telegram_auth import is_valid_init_data, get_user_from_init_data
 
 logger = logging.getLogger(__name__)

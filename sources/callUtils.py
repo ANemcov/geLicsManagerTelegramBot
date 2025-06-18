@@ -14,8 +14,8 @@ def get_sp(sn):
         sp = str(output.stdout.decode().replace("\r\n", ''))
     except Exception as e:
         print(f"io error : {e}")
-    finally:
-        return sp
+
+    return sp
 
 
 def get_lics(sn, sp):
@@ -27,8 +27,8 @@ def get_lics(sn, sp):
         output = output.stdout
     except Exception as e:
         print(f"io error : {e}")
-    finally:
-        return output
+
+    return output
 
 
 def slic(sn, lic_num):
@@ -40,8 +40,8 @@ def slic(sn, lic_num):
         output = output.stdout 
     except Exception as e:
         print(f"io error: {e}")
-    finally:
-        return output
+
+    return output
 
 
 if __name__ == '__main__':
