@@ -113,7 +113,7 @@ def get_settings():
                 'root_password': '',
                 'bitmobile_host': '',
                 'admin_chat': '',
-                'web_api_url': ''}
+                'web_app_url': ''}
 
     settings.update(_load_settings_file())
     settings.update(_load_env_settings())
