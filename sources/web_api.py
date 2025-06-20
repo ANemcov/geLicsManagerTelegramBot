@@ -24,6 +24,43 @@ async def send_admin_message(text: str):
     async with httpx.AsyncClient() as client:
         await client.post(url, json={"chat_id": settings['admin_chat'], "text": text})
 
+@app.on_event("startup")
+async def ensure_web_app_menu_button():
+    if not settings['telegram_bot_token'] or not settings['web_app_url']:
+        logger.warning("TELEGRAM_BOT_TOKEN or WEB_APP_URL is not set — skipping menu button setup.")
+        return
+
+    url = f"https://api.telegram.org/bot{settings['telegram_bot_token']}/getChatMenuButton"
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.post(url)
+            resp.raise_for_status()
+            result = resp.json().get("result", {})
+
+            if result.get("type") == "web_app" and result.get("web_app", {}).get("url") == settings["web_app_url"]:
+                logger.info("Web App menu button already set.")
+                return
+
+            set_url = f"https://api.telegram.org/bot{settings['telegram_bot_token']}/setChatMenuButton"
+            payload = {
+                "menu_button": {
+                    "type": "web_app",
+                    "text": "Открыть панель",
+                    "web_app": {
+                        "url": settings["web_app_url"]
+                    }
+                }
+            }
+
+            set_resp = await client.post(set_url, json=payload)
+            set_resp.raise_for_status()
+            logger.info("Web App menu button successfully set.")
+
+        except Exception as e:
+            logger.error(f"Failed to ensure Web App menu button: {e}")
+
+
 @app.get("/api")
 async def index():
     return {"message": "Grotem Lic API is running"}
