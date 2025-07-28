@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from bot import GrotemServerConnector
 from settings import get_settings
 from fastapi import HTTPException, Header
-from utils.telegram_auth import is_valid_init_data, get_user_from_init_data
+from utils.telegram_auth import is_valid_init_data, get_user_from_init_data, check_user_allowed
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -101,7 +101,7 @@ async def reset_licenses(solution_name: str, x_telegram_initdata: str = Header(.
     if not is_valid_init_data(x_telegram_initdata, bot_token):
         raise HTTPException(status_code=403, detail="Invalid Telegram initData")
 
-    user = get_user_from_init_data(x_telegram_initdata)
+    user = await check_user_allowed(x_telegram_initdata)
     
     if not connector.reset_lic_count(solution_name):
         return JSONResponse(status_code=400, content={"error": connector.error_description})

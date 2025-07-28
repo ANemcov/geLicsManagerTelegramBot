@@ -23,18 +23,33 @@ def start_telegram_bot():
     from bot import GrotemServerConnector
 
     async def start(update, context):
+        bot_settings = get_settings()
+        
+        user_id = update.effective_user.id
+        
+        if user_id not in bot_settings["allowed_users"]:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="Доступ запрещён")
+            return
+        
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"Использование для чата {update.effective_chat.id}: <Название решения>, [сброс]"
         )
 
     async def echo(update, context):
+        
+        bot_settings = get_settings()
+        
+        if update.effective_user.id not in bot_settings["allowed_users"]:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="Доступ запрещён")
+            return
+        
         if update.message and update.message.text:
             sn = str(update.message.text).strip().split(' ')[0]
         else:
             # обработать другие случаи или пропустить
             return
-        bot_settings = get_settings()
+        
         bot = GrotemServerConnector(bot_settings['bitmobile_host'], bot_settings['root_password'])
 
         if 'сброс' in str(update.message.text).lower():

@@ -7,6 +7,10 @@ import json
 import logging
 from typing import Dict
 from urllib.parse import unquote
+from fastapi import HTTPException, Header
+
+from utils.admin_notify import notify_admin_about_unauthorized
+from settings import get_settings
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -53,3 +57,15 @@ def get_user_from_init_data(init_data: str) -> dict:
     """Парсит JSON-поле user из initData (не проверяя подпись)"""
     data = parse_init_data(init_data)
     return json.loads(data['user'])
+
+
+async def check_user_allowed(x_telegram_initdata: str, source: str = "WebApp"):
+    settings = get_settings()
+    user = get_user_from_init_data(x_telegram_initdata)
+    user_id = int(user.get("id"))
+    username = user.get("username", "")
+
+    if user_id not in settings["allowed_users"]:
+        await notify_admin_about_unauthorized(user_id, username, chat_id=None, source=source)
+        raise HTTPException(status_code=403, detail="User not allowed")
+    return user

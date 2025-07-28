@@ -103,7 +103,8 @@ def _load_env_settings():
     env_settings = {}
     for env_item in [i for i in os.environ if i.startswith('TELEGRAM_BOT')]:
         param_name = env_item.split('__')[1].lower().strip()
-        env_settings.update({param_name: os.environ[env_item]})
+        param_value = os.environ[env_item]
+        env_settings.update({param_name: param_value})
     return env_settings
 
 
@@ -113,10 +114,15 @@ def get_settings():
                 'root_password': '',
                 'bitmobile_host': '',
                 'admin_chat': '',
-                'web_app_url': ''}
+                'web_app_url': '',
+                'allowed_users': ''}
 
     settings.update(_load_settings_file())
     settings.update(_load_env_settings())
+
+    settings['allowed_users'] = [
+        int(uid.strip()) for uid in settings['allowed_users'].split(",") if uid.strip().isdigit()
+    ]
 
     return settings
 
