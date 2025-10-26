@@ -31,7 +31,7 @@ def start_telegram_bot():
             await context.bot.send_message(chat_id=update.effective_chat.id, text="Доступ запрещён")
             return
         
-        context.bot.send_message(
+        await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"Использование для чата {update.effective_chat.id}: <Название решения>, [сброс]"
         )
