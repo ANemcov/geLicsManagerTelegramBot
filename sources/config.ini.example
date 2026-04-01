@@ -3,4 +3,4 @@ telegram_bot_token = 1111111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 utils_path = c:\Utils\Utils.exe
 root_password = My_SecReT_PaSSw0rd
 bitmobile_host = http://server.example.com/my_server
-# proxy_url = socks5://user:pass@proxy.example.com:1080
+# proxy_url = socks5h://user:pass@proxy.example.com:1080
