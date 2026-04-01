@@ -80,7 +80,10 @@ def start_telegram_bot():
     if not bot.check_connection():
         raise ConnectionError(f'Unable connect to Bitmobile server {bot_settings["bitmobile_host"]}')
 
-    app = ApplicationBuilder().token(bot_settings['telegram_bot_token']).build()
+    builder = ApplicationBuilder().token(bot_settings['telegram_bot_token'])
+    if bot_settings.get('proxy_url'):
+        builder = builder.proxy(bot_settings['proxy_url']).get_updates_proxy(bot_settings['proxy_url'])
+    app = builder.build()
 
     app.add_handler(CommandHandler('start', start))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), echo))
